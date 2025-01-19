@@ -54,6 +54,10 @@ struct StretchProgressView: View {
                                 if repsCompleted >= stretch.reps {
                                     repsCompleted = 0
                                     setsCompleted += 1
+                                    
+                                    if setsCompleted >= stretch.sets {
+                                        stretch.markCompleted()
+                                    }
                                 }
                                 
                                 timerStarted = nil
@@ -65,6 +69,10 @@ struct StretchProgressView: View {
                     if repsCompleted >= stretch.reps {
                         repsCompleted = 0
                         setsCompleted += 1
+                        
+                        if setsCompleted >= stretch.sets {
+                            stretch.markCompleted()
+                        }
                     }
                 }
             }.disabled(repsCompleted >= stretch.reps || setsCompleted >= stretch.sets || timerStarted != nil)

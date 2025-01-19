@@ -16,6 +16,8 @@ final class Stretch {
     var holdTime: Int?
     var dateCreated: Date
     
+    var lastCompleted: Date?
+    
     init(name: String, sets: Int, reps: Int, holdTime: Int? = nil) {
         self.name = name
         self.sets = sets
@@ -23,6 +25,21 @@ final class Stretch {
         self.holdTime = holdTime
         
         self.dateCreated = Date()
+    }
+    
+    func markCompleted() {
+        lastCompleted = Date()
+        try! modelContext?.save()
+    }
+    
+    func clearCompletion() {
+        lastCompleted = nil
+        try! modelContext?.save()
+    }
+    
+    @Transient var completedToday: Bool {
+        guard let lastCompleted = lastCompleted else { return false }
+        return Calendar.current.isDateInToday(lastCompleted)
     }
     
     @Transient var pluralizedReps: String {
