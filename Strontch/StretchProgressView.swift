@@ -16,6 +16,39 @@ struct StretchProgressView: View {
     @State private var timerStarted: Date?
     @State private var timerDuration: TimeInterval = 0
     
+    fileprivate func repStartHaptic() {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    }
+    
+    fileprivate func repCompleteHaptic() {
+        UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+    }
+    
+    fileprivate func setCompleteHaptic() {
+        UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+    }
+    
+    fileprivate func stretchCompleteHaptic() {
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+    }
+    
+    fileprivate func countRep() {
+        repsCompleted += 1
+        if repsCompleted >= stretch.reps {
+            repsCompleted = 0
+            setsCompleted += 1
+            
+            if setsCompleted >= stretch.sets {
+                stretchCompleteHaptic()
+                stretch.markCompleted()
+            } else {
+                setCompleteHaptic()
+            }
+        } else {
+            repCompleteHaptic()
+        }
+    }
+    
     var body: some View {
         VStack {
             ProgressView(
@@ -44,36 +77,22 @@ struct StretchProgressView: View {
             Button(stretch.holdTime != nil ? "Start Timer" : "Count Rep") {
                 if let holdTime = stretch.holdTime {
                     timerStarted = Date()
+                    repStartHaptic()
                     Timer.scheduledTimer(
                         withTimeInterval: 0.1,
                         repeats: true) { timer in
                             timerDuration = Date().timeIntervalSince(timerStarted!)
                             if timerDuration >= Double(holdTime) {
                                 timer.invalidate()
-                                repsCompleted += 1
-                                if repsCompleted >= stretch.reps {
-                                    repsCompleted = 0
-                                    setsCompleted += 1
-                                    
-                                    if setsCompleted >= stretch.sets {
-                                        stretch.markCompleted()
-                                    }
-                                }
+                                
+                                countRep()
                                 
                                 timerStarted = nil
                                 timerDuration = 0
                             }
                         }
                 } else {
-                    repsCompleted += 1
-                    if repsCompleted >= stretch.reps {
-                        repsCompleted = 0
-                        setsCompleted += 1
-                        
-                        if setsCompleted >= stretch.sets {
-                            stretch.markCompleted()
-                        }
-                    }
+                    countRep()
                 }
             }.disabled(repsCompleted >= stretch.reps || setsCompleted >= stretch.sets || timerStarted != nil)
             

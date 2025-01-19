@@ -39,7 +39,7 @@ struct StretchListView: View {
 }
 
 #Preview("Completed") {
-    var stretch = Stretch(name: "Bridges", sets: 1, reps: 3, holdTime: 10)
+    let stretch = Stretch(name: "Bridges", sets: 1, reps: 3, holdTime: 10)
     stretch.markCompleted()
     return StretchListView(stretch: stretch)
 }
