@@ -10,57 +10,61 @@ import SwiftData
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
+    @Query(sort: \Stretch.dateCreated) private var stretches: [Stretch]
+    
+    @State var sidebarVisibility = NavigationSplitViewVisibility.all
 
     var body: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: $sidebarVisibility) {
             List {
-                ForEach(items) { item in
+                ForEach(stretches) { stretch in
                     NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
+                        StretchProgressView(stretch: stretch)
                     } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
+                        StretchListView(stretch: stretch)
                     }
                 }
                 .onDelete(perform: deleteItems)
             }
-#if os(macOS)
-            .navigationSplitViewColumnWidth(min: 180, ideal: 200)
-#endif
             .toolbar {
-#if os(iOS)
                 ToolbarItem(placement: .navigationBarTrailing) {
                     EditButton()
                 }
-#endif
                 ToolbarItem {
-                    Button(action: addItem) {
+                    NavigationLink {
+                        AddStretchView()
+                    } label: {
                         Label("Add Item", systemImage: "plus")
                     }
-                }
-            }
-        } detail: {
-            Text("Select an item")
-        }
-    }
 
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
-        }
+                }
+            }.toolbar(removing: .sidebarToggle)
+            .navigationTitle("Strontch")
+        } detail: {
+            Text("Pick a stretch to get started")
+        }.navigationSplitViewStyle(.balanced)
     }
 
     private func deleteItems(offsets: IndexSet) {
         withAnimation {
             for index in offsets {
-                modelContext.delete(items[index])
+                modelContext.delete(stretches[index])
             }
         }
     }
 }
 
 #Preview {
-    ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: Stretch.self, configurations: config)
+    
+    container.mainContext.insert(
+        Stretch(name: "Clamshell", sets: 2, reps: 10)
+    )
+    container.mainContext.insert(
+        Stretch(name: "Seated Hamstring Stretch", sets: 6, reps: 10, holdTime: 30)
+    )
+    
+    return ContentView()
+        .modelContainer(container)
 }
